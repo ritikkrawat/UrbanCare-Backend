@@ -7,8 +7,8 @@
   "type": "commonjs",
   "main": "index.jsx",
   "scripts": {
-    "start": "node src/server.jsx",
-    "dev": "nodemon src/server.jsx"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
