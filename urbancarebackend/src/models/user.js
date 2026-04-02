@@ -31,17 +31,28 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      select: false // 🔥 hide password by default
+      select: false // 🔥 hidden by default
     },
 
     address: String,
     district: String,
-    pincode: String
+    pincode: String,
+
+    // 🔥 NEW FIELDS (IMPORTANT)
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+
+    deleteAt: {
+      type: Date,
+      default: null
+    }
   },
   { timestamps: true }
 );
 
-// 🔥 Indexing for performance
+// 🔥 Indexing (performance)
 userSchema.index({ email: 1 });
 userSchema.index({ mobile: 1 });
 
