@@ -34,7 +34,9 @@ const userSchema = new mongoose.Schema(
       select: false // 🔥 hidden by default
     },
 
-    address: String,
+    address1: String,
+    address2: String,
+    
     district: String,
     pincode: String,
 
