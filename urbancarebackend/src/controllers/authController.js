@@ -122,12 +122,12 @@ const loginUser = async (req, res) => {
     }
 
     // 🔥 BLOCK LOGIN IF SCHEDULED FOR DELETE
-    if (user.isDeleted) {
-      return res.status(403).json({
-        success: false,
-        message: "Account is scheduled for deletion. Please restore your account."
-      });
-    }
+    // if (user.isDeleted) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Account is scheduled for deletion. Please restore your account."
+    //   });
+    // }
 
     const token = generateToken(user._id);
 
@@ -153,137 +153,8 @@ const loginUser = async (req, res) => {
   }
 };
 
-// ================= DELETE INSTANT =================
-const deleteInstant = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    const deletedUser = await User.findByIdAndDelete(userId);
-
-    if (!deletedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Account permanently deleted"
-    });
-
-  } catch (error) {
-    console.error("INSTANT DELETE ERROR:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
-  }
-};
-
-// ================= DELETE REQUEST =================
-const deleteRequest = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    const deleteAfter = new Date();
-    deleteAfter.setDate(deleteAfter.getDate() + 7);
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        isDeleted: true,
-        deleteAt: deleteAfter
-      },
-      { new: true }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Account scheduled for deletion in 7 days",
-      deleteAt: user.deleteAt
-    });
-
-  } catch (error) {
-    console.error("DELETE REQUEST ERROR:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
-  }
-};
-
-// ================= CHANGE PASSWORD =================
-const changePassword = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const { oldPassword, newPassword } = req.body;
-
-    // 1. Validate input
-    if (!oldPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required"
-      });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "New password must be at least 6 characters"
-      });
-    }
-
-    // 2. Get user with password
-    const user = await User.findById(userId).select("+password");
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
-
-    // 3. Compare old password
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: "Old password is incorrect"
-      });
-    }
-
-    // 4. Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // 5. Update password
-    user.password = hashedPassword;
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Password updated successfully"
-    });
-
-  } catch (error) {
-    console.error("CHANGE PASSWORD ERROR:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
-  }
-};
-
-
 // ================= EXPORT =================
 module.exports = {
   registerUser,
-  loginUser,
-  deleteInstant,
-  deleteRequest,
-  changePassword
+  loginUser
 };
