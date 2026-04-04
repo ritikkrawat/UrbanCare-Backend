@@ -6,7 +6,7 @@ const updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const {
+    let {
       name,
       gender,
       district,
@@ -17,6 +17,50 @@ const updateProfile = async (req, res) => {
       email
     } = req.body;
 
+    // ✅ Trim values
+    name     = name?.trim();
+    pincode  = pincode?.trim(); // ✅ added
+    address1 = address1?.trim();
+    address2 = address2?.trim();
+    email    = email?.trim();
+    mobile   = mobile?.trim();
+
+    // ================= VALIDATION =================
+
+    // ✅ Required fields — pincode added
+    if (!name || !gender || !district || !pincode || !address1 || !mobile || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be filled"
+      });
+    }
+
+    // ✅ Email validation
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+    }
+
+    // ✅ Mobile validation (10 digits)
+    if (!/^\d{10}$/.test(mobile)) {
+      return res.status(400).json({
+        success: false,
+        message: "Mobile must be exactly 10 digits"
+      });
+    }
+
+    // ✅ Pincode validation (6 digits) — added
+    if (!/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Pincode must be exactly 6 digits"
+      });
+    }
+
+    // ================= FIND USER =================
     const user = await User.findById(userId);
 
     if (!user) {
@@ -26,9 +70,10 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    if (email && email !== user.email) {
-      const existingEmail = await User.findOne({ email });
+    // ================= UNIQUE CHECK =================
 
+    if (email !== user.email) {
+      const existingEmail = await User.findOne({ email });
       if (existingEmail) {
         return res.status(400).json({
           success: false,
@@ -37,9 +82,8 @@ const updateProfile = async (req, res) => {
       }
     }
 
-    if (mobile && mobile !== user.mobile) {
+    if (mobile !== user.mobile) {
       const existingMobile = await User.findOne({ mobile });
-
       if (existingMobile) {
         return res.status(400).json({
           success: false,
@@ -48,15 +92,16 @@ const updateProfile = async (req, res) => {
       }
     }
 
-    user.name = name || user.name;
-    user.gender = gender || user.gender;
-    user.district = district || user.district;
-    user.pincode = pincode || user.pincode;
-    user.mobile = mobile || user.mobile;
-    user.email = email || user.email;
+    // ================= UPDATE =================
 
-    user.address1 = address1 || user.address1;
-    user.address2 = address2 || user.address2;
+    user.name     = name;
+    user.gender   = gender;
+    user.district = district;
+    user.pincode  = pincode;  // ✅ no longer fallback to "" since it's required
+    user.mobile   = mobile;
+    user.email    = email;
+    user.address1 = address1;
+    user.address2 = address2 || "";
 
     await user.save();
 
@@ -92,12 +137,12 @@ const getProfile = async (req, res) => {
     res.status(200).json({
       success: true,
       user: {
-        name: user.name,
-        gender: user.gender,
+        name:     user.name,
+        gender:   user.gender,
         district: user.district,
-        pincode: user.pincode,
-        mobile: user.mobile,
-        email: user.email,
+        pincode:  user.pincode,
+        mobile:   user.mobile,
+        email:    user.email,
         address1: user.address1,
         address2: user.address2,
       }
@@ -240,9 +285,9 @@ const changePassword = async (req, res) => {
 
 // ================= EXPORT =================
 module.exports = {
-    updateProfile,
-    getProfile,
-    deleteInstant,
-    // deleteRequest,
-    changePassword
+  updateProfile,
+  getProfile,
+  deleteInstant,
+  // deleteRequest,
+  changePassword
 };
