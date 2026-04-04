@@ -2,11 +2,7 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true
-    },
+    name: { type: String, required: true, trim: true },
 
     gender: {
       type: String,
@@ -31,31 +27,18 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      select: false // 🔥 hidden by default
+      select: false
     },
 
     address1: String,
     address2: String,
-    
     district: String,
     pincode: String,
 
-    // 🔥 NEW FIELDS (IMPORTANT)
-    isDeleted: {
-      type: Boolean,
-      default: false
-    },
-
-    deleteAt: {
-      type: Date,
-      default: null
-    }
+    isDeleted: { type: Boolean, default: false },
+    deleteAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
-
-// 🔥 Indexing (performance)
-userSchema.index({ email: 1 });
-userSchema.index({ mobile: 1 });
 
 module.exports = mongoose.model("User", userSchema);
