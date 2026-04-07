@@ -11,7 +11,8 @@ const registerUser = async (req, res) => {
       mobile,
       password,
       gender,
-      address,
+      address1,
+      address2,
       district,
       pincode
     } = req.body;
@@ -57,7 +58,8 @@ const registerUser = async (req, res) => {
       mobile,
       password: hashedPassword,
       gender,
-      address,
+      address1,
+      address2,
       district,
       pincode
     });
@@ -121,14 +123,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // 🔥 BLOCK LOGIN IF SCHEDULED FOR DELETE
-    // if (user.isDeleted) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: "Account is scheduled for deletion. Please restore your account."
-    //   });
-    // }
-
     const token = generateToken(user._id);
 
     res.status(200).json({
@@ -153,8 +147,152 @@ const loginUser = async (req, res) => {
   }
 };
 
+// ================= GENERATE OTP =================
+const generateOTP = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
+
+// ================= FORGOT PASSWORD =================
+const forgotPassword = async (req, res) => {
+  try {
+    const { email, mobile } = req.body;
+
+    if (!email && !mobile) {
+      return res.status(400).json({
+        success: false,
+        message: "Email or Mobile is required"
+      });
+    }
+
+    const query = [];
+    if (email) query.push({ email: email.toLowerCase() });
+    if (mobile) query.push({ mobile });
+
+    const user = await User.findOne({ $or: query });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const otp = generateOTP();
+
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+
+    await user.save();
+
+    console.log("OTP:", otp); // 🔥 replace with email/SMS
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent successfully"
+    });
+
+  } catch (error) {
+    console.error("FORGOT PASSWORD ERROR:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+// ================= VERIFY OTP =================
+const verifyOTP = async (req, res) => {
+  try {
+    const { email, mobile, otp } = req.body;
+
+    const query = [];
+    if (email) query.push({ email: email.toLowerCase() });
+    if (mobile) query.push({ mobile });
+
+    const user = await User.findOne({ $or: query });
+
+    if (!user || user.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP"
+      });
+    }
+
+    if (user.otpExpiry < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified"
+    });
+
+  } catch (error) {
+    console.error("VERIFY OTP ERROR:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+// ================= RESET PASSWORD =================
+const resetPassword = async (req, res) => {
+  try {
+    const { email, mobile, password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters"
+      });
+    }
+
+    const query = [];
+    if (email) query.push({ email: email.toLowerCase() });
+    if (mobile) query.push({ mobile });
+
+    const user = await User.findOne({ $or: query }).select("+password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    user.password = hashedPassword;
+    user.otp = null;
+    user.otpExpiry = null;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful"
+    });
+
+  } catch (error) {
+    console.error("RESET PASSWORD ERROR:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 // ================= EXPORT =================
 module.exports = {
   registerUser,
-  loginUser
+  loginUser,
+  forgotPassword,
+  verifyOTP,
+  resetPassword
 };
