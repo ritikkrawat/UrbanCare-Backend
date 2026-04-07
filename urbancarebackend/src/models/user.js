@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
 
     gender: {
       type: String,
-      enum: ["Male", "Female", "Other"]
+      enum: ["Male", "Female", "Transgender"]
     },
 
     email: {
@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       select: false
+    },
+
+    otp: {
+      type: String,
+      default: null
+    },
+    
+    otpExpiry: {
+      type: Date,
+      default: null
     },
 
     address1: String,
