@@ -3,6 +3,8 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
+const complaintRoutes = require("./routes/complaintRoutes");
+
 
 const app = express();
 
@@ -11,6 +13,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/complaint", complaintRoutes);
 
 app.get("/", (req, res) => {
   res.send("UrbanCare Backend is running");
