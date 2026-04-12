@@ -10,7 +10,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://urbancaredev.vercel.app/"],
+    origin: ["https://urbancaredev.vercel.app"],
     credentials: true,
   })
 );
