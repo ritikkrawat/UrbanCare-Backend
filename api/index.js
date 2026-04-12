@@ -14,7 +14,6 @@ async function connect() {
   }
 }
 
-module.exports = async (req, res) => {
-  await connect();
+module.exports = (req, res) => {
   return app(req, res);
 };
