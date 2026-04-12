@@ -33,6 +33,10 @@ const submitComplaint = async (req, res) => {
         message: "All required fields must be filled"
       });
     }
+    
+    // Files
+    const videos = req.files?.videos?.map(f => f.path) || [];
+    const images = req.files?.images?.map(f => f.path) || [];
 
     if (images.length === 0 && videos.length === 0) {
       return res.status(400).json({
@@ -40,9 +44,6 @@ const submitComplaint = async (req, res) => {
         message: "Upload at least one image or video"
       });
     }
-    // Files
-    const images = req.files?.images?.map(f => f.path) || [];
-    const videos = req.files?.videos?.map(f => f.path) || [];
 
     const complaint = await Complaint.create({
       user: userId,
