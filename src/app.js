@@ -7,14 +7,10 @@ const complaintRoutes = require("./routes/complaintRoutes.js");
 
 const app = express();
 
-// ✅ HANDLE CORS + PREFLIGHT
 app.use(cors({
   origin: "https://urbancaredev.vercel.app",
   credentials: true,
 }));
-
-// ✅ IMPORTANT: handle preflight requests
-app.options("*", cors());
 
 app.use(express.json());
 
