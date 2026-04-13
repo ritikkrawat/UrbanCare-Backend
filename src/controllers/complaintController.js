@@ -1,6 +1,6 @@
-const Complaint = require("../models/complaint");
+const Complaint = require("../models/complaint.js");
+const uploadToCloudinary = require("../utils/uploadToCloudinary.js");
 
-// ================= SUBMIT COMPLAINT =================
 const submitComplaint = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -34,11 +34,33 @@ const submitComplaint = async (req, res) => {
       });
     }
 
-    // Files
-    const videos = req.files?.videos?.map((f) => f.path) || [];
-    const images = req.files?.images?.map((f) => f.path) || [];
+    let imageUrls = [];
+    let videoUrls = [];
 
-    if (images.length === 0 && videos.length === 0) {
+    // 🔥 Upload Images
+    if (req.files?.images) {
+      const uploads = await Promise.all(
+        req.files.images.map(file =>
+          uploadToCloudinary(file.buffer, "image")
+        )
+      );
+
+      imageUrls = uploads.map(file => file.secure_url);
+    }
+
+    // 🔥 Upload Videos
+    if (req.files?.videos) {
+      const uploads = await Promise.all(
+        req.files.videos.map(file =>
+          uploadToCloudinary(file.buffer, "video")
+        )
+      );
+
+      videoUrls = uploads.map(file => file.secure_url);
+    }
+
+    // Validation
+    if (imageUrls.length === 0 && videoUrls.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Upload at least one image or video"
@@ -57,8 +79,8 @@ const submitComplaint = async (req, res) => {
       pincode,
       exactLocation,
       priority,
-      images,
-      videos
+      images: imageUrls,   // ✅ Cloudinary URLs
+      videos: videoUrls    // ✅ Cloudinary URLs
     });
 
     res.status(201).json({
@@ -68,10 +90,10 @@ const submitComplaint = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("COMPLAINT ERROR:", error.message);
+    console.error("COMPLAINT ERROR:", error);
     res.status(500).json({
       success: false,
-      message: "Server error"
+      message: error.message
     });
   }
 };
