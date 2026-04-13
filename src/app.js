@@ -8,7 +8,8 @@ const complaintRoutes = require("./routes/complaintRoutes.js");
 const app = express();
 
 const allowedOrigins = [
-  "https://urbancaredev.vercel.app"
+  "https://urbancaredev.vercel.app",
+  "http://localhost:3000"
 ];
 
 // ✅ Single CORS config
