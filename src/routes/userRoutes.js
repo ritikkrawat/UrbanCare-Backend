@@ -11,12 +11,12 @@ const {
 } = require("../controllers/userController.js");
 
 // 🔥 GET USER PROFILE (keep this)
-router.get("/profile", protect, (req, res) => {
-  res.json({
-    success: true,
-    user: req.user
-  });
-});
+// router.get("/profile", protect, (req, res) => {
+//   res.json({
+//     success: true,
+//     user: req.user
+//   });
+// });
 
 router.put("/update-profile", protect, updateProfile); 
 router.get("/profile", protect, getProfile);

@@ -6,7 +6,8 @@ const upload = require("../middleware/uploadMiddleware");
 
 const {
   submitComplaint,
-  getMyComplaints
+  getMyComplaints,
+  deleteComplaint
 } = require("../controllers/complaintController");
 
 // MULTIPLE FILE UPLOAD (IMPORTANT 🔥)
@@ -20,6 +21,7 @@ router.post(
   submitComplaint
 );
 
-router.get("/my", protect, getMyComplaints);
+router.get("/my-complaints", protect, getMyComplaints);
+router.delete("/:id", protect, deleteComplaint);
 
 module.exports = router;
