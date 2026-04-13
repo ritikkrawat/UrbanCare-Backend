@@ -5,4 +5,6 @@ const dotenv = require("dotenv");
 dotenv.config();
 connectDB();
 
-module.exports = app;
+module.exports = (req, res) => {
+  return app(req, res);
+};
