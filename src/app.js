@@ -4,6 +4,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
 const complaintRoutes = require("./routes/complaintRoutes.js");
+const cloudinaryRoutes = require("./routes/cloudinaryRoute.js");
 
 const app = express();
 
@@ -51,6 +52,8 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use("/api/cloudinary", cloudinaryRoutes);
+
 // ✅ 404 Handler (catch undefined routes)
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.method} ${req.originalUrl} not found` });
@@ -69,5 +72,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ Export for both local + Vercel
+
 module.exports = app;

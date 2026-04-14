@@ -1,5 +1,4 @@
 const Complaint = require("../models/complaint.js");
-const uploadToCloudinary = require("../utils/uploadToCloudinary.js");
 
 const submitComplaint = async (req, res) => {
   try {
@@ -15,7 +14,9 @@ const submitComplaint = async (req, res) => {
       state,
       pincode,
       exactLocation,
-      priority
+      priority,
+      images,
+      videos
     } = req.body;
 
     // Validation
@@ -34,33 +35,10 @@ const submitComplaint = async (req, res) => {
       });
     }
 
-    let imageUrls = [];
-    let videoUrls = [];
+    const safeImages = Array.isArray(images) ? images : [];
+    const safeVideos = Array.isArray(videos) ? videos : [];
 
-    // 🔥 Upload Images
-    if (req.files?.images) {
-      const uploads = await Promise.all(
-        req.files.images.map(file =>
-          uploadToCloudinary(file.buffer, "image")
-        )
-      );
-
-      imageUrls = uploads.map(file => file.secure_url);
-    }
-
-    // 🔥 Upload Videos
-    if (req.files?.videos) {
-      const uploads = await Promise.all(
-        req.files.videos.map(file =>
-          uploadToCloudinary(file.buffer, "video")
-        )
-      );
-
-      videoUrls = uploads.map(file => file.secure_url);
-    }
-
-    // Validation
-    if (imageUrls.length === 0 && videoUrls.length === 0) {
+    if (safeImages.length === 0 && safeVideos.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Upload at least one image or video"
@@ -79,8 +57,8 @@ const submitComplaint = async (req, res) => {
       pincode,
       exactLocation,
       priority,
-      images: imageUrls,   // ✅ Cloudinary URLs
-      videos: videoUrls    // ✅ Cloudinary URLs
+      images:safeImages,
+      videos: safeVideos
     });
 
     res.status(201).json({
