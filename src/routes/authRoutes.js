@@ -5,7 +5,9 @@ const {
   loginUser,
   forgotPassword,
   verifyOTP,
-  resetPassword
+  resetPassword,
+  sendOtpForRegistration,          
+  verifyRegistrationOtp            
 } = require("../controllers/authController.js");
 
 const protect = require("../middleware/authMiddleware.js");
@@ -17,5 +19,7 @@ router.post("/login", loginUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-otp", verifyOTP);
 router.post("/reset-password", resetPassword);
+router.post("/send-otp", sendOtpForRegistration);
+router.post("/verify-registration-otp", verifyRegistrationOtp);
 
 module.exports = router;

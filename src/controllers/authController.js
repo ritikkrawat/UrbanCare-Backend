@@ -1,7 +1,8 @@
 const User = require("../models/user.js");
 const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/generateToken.js");
-
+const { sendOTPEmail } = require("../utils/sendEmail.js");
+const otpStore = require("../utils/otpStore.js");
 // ================= REGISTER =================
 const registerUser = async (req, res) => {
   try {
@@ -179,11 +180,14 @@ const forgotPassword = async (req, res) => {
     const otp = generateOTP();
 
     user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+    user.otpExpiry = Date.now() + 2 * 60 * 1000;
 
     await user.save();
 
-    console.log("OTP:", otp); // 🔥 replace with email/SMS
+    // ✅ EMAIL SEND
+    if (email) {
+      await sendOTPEmail(email, otp);
+    }
 
     res.status(200).json({
       success: true,
@@ -288,11 +292,111 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// ================= SEND OTP (REGISTRATION) =================
+const sendOtpForRegistration = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists with this email"
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Store OTP
+    otpStore[email] = {
+      otp,
+      expiry: Date.now() + 2 * 60 * 1000 // 5 min
+    };
+
+    // Send email
+    await sendOTPEmail(email, otp,"register");
+
+    console.log("📩 Registration OTP sent:", email);
+
+    res.status(200).json({
+      success: true,
+      message: "OTP sent successfully"
+    });
+
+  } catch (error) {
+    console.error("SEND OTP ERROR:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
+// ================= VERIFY OTP (REGISTRATION) =================
+const verifyRegistrationOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const record = otpStore[email];
+
+    if (!record) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not found. Please request again."
+      });
+    }
+
+    if (record.expiry < Date.now()) {
+      delete otpStore[email];
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired"
+      });
+    }
+
+    if (record.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP"
+      });
+    }
+
+    // OTP correct → delete it
+    delete otpStore[email];
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully"
+    });
+
+  } catch (error) {
+    console.error("VERIFY REG OTP ERROR:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 // ================= EXPORT =================
 module.exports = {
   registerUser,
   loginUser,
   forgotPassword,
   verifyOTP,
-  resetPassword
+  resetPassword,
+  sendOtpForRegistration,
+  verifyRegistrationOtp
 };
