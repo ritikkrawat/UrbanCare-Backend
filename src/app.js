@@ -8,11 +8,9 @@ const cloudinaryRoutes = require("./routes/cloudinaryRoute.js");
 
 const app = express();
 
-// ✅ Flexible CORS: works locally + Vercel + allows no-origin (serverless/postman)
 const allowedOrigins = [
   "https://urbancaredev.vercel.app",
   "http://localhost:3000",
-  "http://127.0.0.1:3000"
 ];
 
 app.use(
