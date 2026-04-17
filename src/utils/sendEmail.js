@@ -10,15 +10,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ✅ Verify connection (runs once on startup)
-transporter.verify((err, success) => {
-  if (err) {
-    console.error("❌ Email config error:", err);
-  } else {
-    console.log("✅ Email server ready");
-  }
-});
-
 const sendOTPEmail = async (to, otp, type = "reset") => {
   try {
     const isRegistration = type === "register";
@@ -62,9 +53,6 @@ const sendOTPEmail = async (to, otp, type = "reset") => {
         </div>
       `,
     });
-
-    console.log(`📩 OTP email sent to ${to}`);
-    console.log("Message ID:", info.messageId);
 
   } catch (error) {
     console.error("❌ Email sending failed:", error);

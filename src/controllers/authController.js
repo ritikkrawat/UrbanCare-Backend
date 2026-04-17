@@ -14,6 +14,7 @@ const registerUser = async (req, res) => {
       gender,
       address1,
       address2,
+      state,
       district,
       pincode
     } = req.body;
@@ -61,6 +62,7 @@ const registerUser = async (req, res) => {
       gender,
       address1,
       address2,
+      state,
       district,
       pincode
     });
@@ -325,8 +327,6 @@ const sendOtpForRegistration = async (req, res) => {
 
     // Send email
     await sendOTPEmail(email, otp,"register");
-
-    console.log("📩 Registration OTP sent:", email);
 
     res.status(200).json({
       success: true,
