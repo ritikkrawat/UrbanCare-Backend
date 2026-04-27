@@ -5,6 +5,7 @@ const authRoutes = require("./routes/authRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
 const complaintRoutes = require("./routes/complaintRoutes.js");
 const cloudinaryRoutes = require("./routes/cloudinaryRoute.js");
+const adminRoutes = require("./routes/adminRoutes.js");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/complaint", complaintRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ✅ Health check (useful for Vercel + monitoring)
 app.get("/", (req, res) => {
