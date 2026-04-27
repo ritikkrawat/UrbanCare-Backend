@@ -23,6 +23,12 @@
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+      // ✅ If admin (no DB lookup needed)
+      if (decoded.role === "admin") {
+        req.user = decoded;
+        return next();
+      }
+
       // Fetch user
       const user = await User.findById(decoded.id).select("-password");
 
