@@ -167,8 +167,76 @@ const deleteComplaint = async (req, res) => {
   }
 };
 
+// ================= TRACK STATUS =================
+const trackComplaintStatus = async (req, res) => {
+  try {
+    const { complaintId } = req.params;
+
+    if (!complaintId) {
+      return res.status(400).json({
+        success: false,
+        message: "Complaint ID is required"
+      });
+    }
+
+    const complaint = await Complaint.findOne({
+      complaintId: complaintId.toUpperCase()
+    });
+
+    if (!complaint) {
+      return res.status(404).json({
+        success: false,
+        message: "No complaint found with this ID"
+      });
+    }
+
+    // Convert status → timeline (since you don’t store timeline yet)
+    const timeline = [
+      {
+        label: "Submitted",
+        date: complaint.createdAt,
+        done: true
+      },
+      {
+        label: "In Progress",
+        date: complaint.status !== "Pending" ? complaint.updatedAt : null,
+        done: complaint.status !== "Pending"
+      },
+      {
+        label: "Resolved",
+        date: complaint.status === "Closed" ? complaint.updatedAt : null,
+        done: complaint.status === "Closed"
+      }
+    ];
+
+    res.status(200).json({
+      success: true,
+      data: {
+        name: "Citizen",
+        complaintId: complaint.complaintId,
+        category: complaint.category,
+        subCategory: complaint.subCategory,
+        description: complaint.description,
+        status: complaint.status.toLowerCase().replace(" ", "-"),
+        priority: complaint.priority,
+        address: `${complaint.addressLine1}, ${complaint.city}`,
+        date: complaint.createdAt,
+        timeline
+      }
+    });
+
+  } catch (error) {
+    console.error("TRACK STATUS ERROR:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+};
+
 module.exports = {
   submitComplaint,
   getMyComplaints,
-  deleteComplaint
+  deleteComplaint,
+  trackComplaintStatus
 };
