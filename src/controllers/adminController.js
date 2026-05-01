@@ -2,10 +2,10 @@ const jwt = require("jsonwebtoken");
 
 const adminLogin = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Validate
-    if (!username || !password) {
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -17,7 +17,7 @@ const adminLogin = async (req, res) => {
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     // Check credentials
-    if (username !== adminEmail || password !== adminPassword) {
+    if (email !== adminEmail || password !== adminPassword) {
       return res.status(401).json({
         success: false,
         message: "Invalid admin credentials",
