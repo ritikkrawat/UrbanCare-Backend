@@ -18,7 +18,9 @@ app.use(
   cors({
     origin: function (origin, callback) {
       // Allow requests with no origin (mobile apps, Postman, serverless cold starts)
-      if (!origin) return callback(null, true);
+      if (!origin && process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
       
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
@@ -42,9 +44,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/complaint", complaintRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/cloudinary", cloudinaryRoutes);
 
 // ✅ Health check (useful for Vercel + monitoring)
-app.get("/", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.status(200).json({ 
     message: "UrbanCare Backend is running 🚀",
     timestamp: new Date().toISOString(),
@@ -52,7 +55,6 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api/cloudinary", cloudinaryRoutes);
 
 // ✅ 404 Handler (catch undefined routes)
 app.use((req, res) => {
@@ -61,7 +63,12 @@ app.use((req, res) => {
 
 // ✅ Global Error Handler (must be last)
 app.use((err, req, res, next) => {
-  console.error("❌ Server Error:", err.stack);
+  console.error("❌ Server Error:", {
+    message: err.message,
+    stack: err.stack,
+    path: req.originalUrl,
+    method: req.method,
+  });
   
   // Don't leak error details in production
   const isProd = process.env.NODE_ENV === "production";
