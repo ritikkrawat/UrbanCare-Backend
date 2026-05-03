@@ -61,6 +61,10 @@ const sendOTPEmail = async (to, otp, type = "reset") => {
 };
 
 const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category, description, date }) => {
+  const clientUrl = process.env.NODE_ENV === "production"
+    ? "https://urbancaredev.vercel.app"
+    : "http://localhost:3000";
+
   try {
     await transporter.sendMail({
       from: `"UrbanCare Support" <${process.env.EMAIL_USER}>`,
@@ -82,7 +86,7 @@ const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category,
           </div>
 
           <p>Track your complaint anytime — no login needed:</p>
-          <a href="${process.env.CLIENT_URL}/status"
+          <a href="${CLIENT_URL}/status"
              style="display:inline-block;background:#7b003f;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;">
             Track My Complaint →
           </a>
