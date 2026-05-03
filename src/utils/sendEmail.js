@@ -86,7 +86,7 @@ const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category,
           </div>
 
           <p>Track your complaint anytime — no login needed:</p>
-          <a href="${CLIENT_URL}/status"
+          <a href="${clientUrl}/status"
              style="display:inline-block;background:#7b003f;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;">
             Track My Complaint →
           </a>
