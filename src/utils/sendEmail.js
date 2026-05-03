@@ -60,4 +60,44 @@ const sendOTPEmail = async (to, otp, type = "reset") => {
   }
 };
 
-module.exports = { sendOTPEmail };
+const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category, description, date }) => {
+  try {
+    await transporter.sendMail({
+      from: `"UrbanCare Support" <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `Complaint Received — ID: ${complaintId}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:20px;">
+          <h2 style="color:#7b003f;">UrbanCare</h2>
+          <p>Dear <strong>${name}</strong>,</p>
+          <p>Your complaint has been successfully submitted. Here are your details:</p>
+
+          <div style="background:#fdf0f5;border-left:4px solid #7b003f;border-radius:6px;padding:16px 20px;margin:20px 0;">
+            <p style="margin:0 0 8px"><strong>Complaint ID:</strong> 
+              <span style="color:#7b003f;font-size:18px;font-weight:bold;">${complaintId}</span>
+            </p>
+            <p style="margin:0 0 8px"><strong>Category:</strong> ${category}</p>
+            <p style="margin:0 0 8px"><strong>Description:</strong> ${description}</p>
+            <p style="margin:0"><strong>Submitted On:</strong> ${date}</p>
+          </div>
+
+          <p>Track your complaint anytime — no login needed:</p>
+          <a href="${process.env.CLIENT_URL}/status"
+             style="display:inline-block;background:#7b003f;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:bold;">
+            Track My Complaint →
+          </a>
+
+          <hr style="margin-top:32px"/>
+          <p style="font-size:12px;color:gray;">
+            If you did not submit this complaint, please contact us immediately.
+          </p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error("❌ Complaint confirmation email failed:", error);
+    throw new Error("Email failed");
+  }
+};
+
+module.exports = { sendOTPEmail, sendComplaintConfirmationEmail }; 

@@ -1,4 +1,5 @@
 const Complaint = require("../models/complaint.js");
+const { sendComplaintConfirmationEmail } = require("../utils/sendEmail.js");
 
 const submitComplaint = async (req, res) => {
   try {
@@ -60,6 +61,15 @@ const submitComplaint = async (req, res) => {
       images:safeImages,
       videos: safeVideos
     });
+
+    sendComplaintConfirmationEmail({
+      to:          req.user.email,
+      name:        req.user.name,
+      complaintId: complaint.complaintId,
+      category:    complaint.category,
+      description: complaint.description,
+      date:        new Date(complaint.createdAt).toLocaleString("en-IN"),
+    }).catch(console.error);
 
     res.status(201).json({
       success: true,
@@ -171,6 +181,7 @@ const deleteComplaint = async (req, res) => {
 const trackComplaintStatus = async (req, res) => {
   try {
     const { complaintId } = req.params;
+    const { email } = req.query;
 
     if (!complaintId) {
       return res.status(400).json({
@@ -181,13 +192,23 @@ const trackComplaintStatus = async (req, res) => {
 
     const complaint = await Complaint.findOne({
       complaintId: complaintId.toUpperCase()
-    });
+    }).populate("user", "name email");;
 
     if (!complaint) {
       return res.status(404).json({
         success: false,
         message: "No complaint found with this ID"
       });
+    }
+
+    const isOwner = req.user && req.user._id.toString() === complaint.user._id.toString();
+    if (!isOwner) {
+      if (!email) {
+        return res.status(400).json({ success: false, message: "Email is required to track this complaint" });
+      }
+      if (complaint.user.email.toLowerCase() !== email.toLowerCase()) {
+        return res.status(403).json({ success: false, message: "Email does not match this complaint" });
+      }
     }
 
     // Convert status → timeline (since you don’t store timeline yet)
@@ -212,7 +233,7 @@ const trackComplaintStatus = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        name: "Citizen",
+        name: complaint.user.name,
         complaintId: complaint.complaintId,
         category: complaint.category,
         subCategory: complaint.subCategory,
