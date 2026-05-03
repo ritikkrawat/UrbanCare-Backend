@@ -44,12 +44,20 @@ const registerUser = async (req, res) => {
     const existingUser = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { mobile }]
     });
-
+    
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists"
-      });
+      if (existingUser.email === email.toLowerCase()) {
+        return res.status(400).json({
+          success: false,
+          message: "An account with this email already exists. Please login."
+        });
+      }
+      if (existingUser.mobile === mobile) {
+        return res.status(400).json({
+          success: false,
+          message: "An account with this mobile number already exists. Please login."
+        });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -111,18 +119,18 @@ const loginUser = async (req, res) => {
     }).select("+password");
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({        
         success: false,
-        message: "Invalid credentials"
+        message: "No account found with this email."
       });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(401).json({
+      return res.status(401).json({        
         success: false,
-        message: "Invalid credentials"
+        message: "Incorrect password. Please try again."
       });
     }
 
