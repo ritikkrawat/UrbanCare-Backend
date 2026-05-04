@@ -88,6 +88,7 @@ npm run dev
 npm start
 
 🔧 Environment Variables
+
 PORT=5000
 
 MONGO_URI=your_mongodb_connection
