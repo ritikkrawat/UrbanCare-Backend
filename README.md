@@ -69,39 +69,6 @@ The UrbanCare backend is a **scalable REST API** that enables:
 - Cloudinary  
 - Nodemailer  
 
-## 🔌 API Endpoints
-
-### 🔐 Auth Routes
-
--POST /api/auth/register
--POST /api/auth/login
--POST /api/auth/send-otp
--POST /api/auth/verify-registration-otp
--POST /api/auth/forgot-password
--POST /api/auth/verify-otp
--POST /api/auth/reset-password
-
-### 🧩 Complaint Routes
-
--POST /api/complaint/submit
--GET /api/complaint/my-complaints
--DELETE /api/complaint/:id
--GET /api/complaint/track/:complaintId
-
-### 👤 User Routes
-
-GET /api/user/profile
-
-### 🛠 Admin Routes
-
-(Manage complaints, users, analytics)
-
-### ☁️ Cloudinary
-
-GET /api/cloudinary/signature
-
-### ❤️ Health Check
-
 ## 🛠 Installation & Setup
 
 bash
