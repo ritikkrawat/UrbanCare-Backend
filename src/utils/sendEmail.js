@@ -65,6 +65,13 @@ const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category,
     ? "https://urbancaredev.vercel.app"
     : "http://localhost:3000";
 
+  const d = new Date(date);
+  const formattedDate = d.toLocaleDateString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+  }) + " • " + d.toLocaleTimeString("en-IN", {
+    hour: "2-digit", minute: "2-digit", hour12: true,
+  });
+
   try {
     await transporter.sendMail({
       from: `"UrbanCare Support" <${process.env.EMAIL_USER}>`,
@@ -82,7 +89,7 @@ const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category,
             </p>
             <p style="margin:0 0 8px"><strong>Category:</strong> ${category}</p>
             <p style="margin:0 0 8px"><strong>Description:</strong> ${description}</p>
-            <p style="margin:0"><strong>Submitted On:</strong> ${date}</p>
+            <p style="margin:0"><strong>Submitted On:</strong> ${formattedDate}</p>
           </div>
 
           <p>Track your complaint anytime — no login needed:</p>

@@ -68,7 +68,7 @@ const submitComplaint = async (req, res) => {
       complaintId: complaint.complaintId,
       category:    complaint.category,
       description: complaint.description,
-      date:        new Date(complaint.createdAt).toLocaleString("en-IN"),
+      date:        complaint.createdAt,
     }).catch(console.error);
 
     res.status(201).json({
