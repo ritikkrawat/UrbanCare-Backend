@@ -73,20 +73,20 @@ The UrbanCare backend is a **scalable REST API** that enables:
 
 ### 🔐 Auth Routes
 
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/send-otp
-POST /api/auth/verify-registration-otp
-POST /api/auth/forgot-password
-POST /api/auth/verify-otp
-POST /api/auth/reset-password
+-POST /api/auth/register
+-POST /api/auth/login
+-POST /api/auth/send-otp
+-POST /api/auth/verify-registration-otp
+-POST /api/auth/forgot-password
+-POST /api/auth/verify-otp
+-POST /api/auth/reset-password
 
 ### 🧩 Complaint Routes
 
-POST /api/complaint/submit
-GET /api/complaint/my-complaints
-DELETE /api/complaint/:id
-GET /api/complaint/track/:complaintId
+-POST /api/complaint/submit
+-GET /api/complaint/my-complaints
+-DELETE /api/complaint/:id
+-GET /api/complaint/track/:complaintId
 
 ### 👤 User Routes
 
