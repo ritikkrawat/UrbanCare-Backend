@@ -65,7 +65,7 @@ const sendComplaintConfirmationEmail = async ({ to, name, complaintId, category,
     ? "https://urbancaredev.vercel.app"
     : "http://localhost:3000";
 
-  const d = new Date(date);
+  const d = new Date(new Date(date).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
   const formattedDate = d.toLocaleDateString("en-IN", {
     day: "2-digit", month: "short", year: "numeric",
   }) + " • " + d.toLocaleTimeString("en-IN", {
