@@ -16,20 +16,22 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // ✅ allow requests without origin (Vercel / Postman / preflight)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, Postman, serverless cold starts)
+      if (!origin && process.env.NODE_ENV !== "production") {
         return callback(null, true);
       }
-
-      console.warn("🚫 Blocked by CORS:", origin);
-
-      // ❗ DO NOT throw error → allow but log
-      return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`🚫 CORS blocked: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
 
