@@ -1,5 +1,7 @@
 const User = require("../models/user.js");
 const bcrypt = require("bcryptjs");
+const Complaint = require("../models/complaint.js");
+const cloudinary = require("cloudinary").v2;
 
 // ================= UPDATE PROFILE =================
 const updateProfile = async (req, res) => {
@@ -159,17 +161,43 @@ const getProfile = async (req, res) => {
 };
 
 // ================= DELETE INSTANT =================
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 const deleteInstant = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const deletedUser = await User.findByIdAndDelete(userId);
+    // 1. Fetch all complaints to get media URLs
+    const complaints = await Complaint.find({ user: userId });
 
+    // 2. Extract public IDs from Cloudinary URLs
+    const extractPublicId = (url) => {
+      const parts = url.split("/");
+      const fileWithExt = parts[parts.length - 1];
+      return fileWithExt.split(".")[0]; // remove extension
+    };
+
+    const imageIds = complaints.flatMap(c => c.images.map(extractPublicId));
+    const videoIds = complaints.flatMap(c => c.videos.map(extractPublicId));
+    
+    // 3. Delete from Cloudinary
+    await Promise.all([
+      ...imageIds.map(id => cloudinary.uploader.destroy(id, { resource_type: "image" })),
+      ...videoIds.map(id => cloudinary.uploader.destroy(id, { resource_type: "video" })),
+    ]);
+
+    // 4. Delete complaints from DB
+    await Complaint.deleteMany({ user: userId });
+
+    // 5. Delete user last
+    const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
     res.status(200).json({
@@ -179,11 +207,7 @@ const deleteInstant = async (req, res) => {
 
   } catch (error) {
     console.error("INSTANT DELETE ERROR:", error.message);
-
-    res.status(500).json({
-      success: false,
-      message: "Server error"
-    });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
