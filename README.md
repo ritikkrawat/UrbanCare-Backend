@@ -89,12 +89,17 @@ npm start
 
 🔧 Environment Variables
 PORT=5000
+
 MONGO_URI=your_mongodb_connection
+
 JWT_SECRET=your_secret_key
 
 CLOUDINARY_CLOUD_NAME=your_cloud
+
 CLOUDINARY_API_KEY=your_key
+
 CLOUDINARY_API_SECRET=your_secret
 
 EMAIL_USER=your_email
+
 EMAIL_PASS=your_email_password
