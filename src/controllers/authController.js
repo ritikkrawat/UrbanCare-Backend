@@ -303,23 +303,19 @@ const resetPassword = async (req, res) => {
 };
 
 // ================= SEND OTP (REGISTRATION) =================
-const { performance } = require("perf_hooks");
-
 const sendOtpForRegistration = async (req, res) => {
-  const start = performance.now(); // 🔵 total start
-
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ success: false, message: "Email is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
     }
 
-    const t1 = performance.now();
-
+    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
-
-    const t2 = performance.now();
 
     if (existingUser) {
       return res.status(400).json({
@@ -328,42 +324,22 @@ const sendOtpForRegistration = async (req, res) => {
       });
     }
 
+    // Generate OTP
     const otp = generateOTP();
 
-    const t3 = performance.now();
-
+    // Store OTP
     otpStore[email] = {
       otp,
-      expiry: Date.now() + 2 * 60 * 1000
+      expiry: Date.now() + 2 * 60 * 1000 // 5 min
     };
 
-    const t4 = performance.now();
+    // Send email
+    await sendOTPEmail(email, otp,"register");
 
-    // ✅ respond FIRST
     res.status(200).json({
       success: true,
       message: "OTP sent successfully"
     });
-
-    const t5 = performance.now();
-
-    // ✅ send email AFTER response
-    sendOTPEmail(email, otp, "register")
-      .then(() => {
-        const t6 = performance.now();
-
-        console.log("📧 Email send time:", (t6 - t5).toFixed(2), "ms");
-        console.log("🧠 Total backend time (including async email):", (t6 - start).toFixed(2), "ms");
-      })
-      .catch(err => {
-        console.error("Email error:", err.message);
-      });
-
-    // 🔍 Logs BEFORE email (important)
-    console.log("🔎 DB check:", (t2 - t1).toFixed(2), "ms");
-    console.log("🔎 OTP generation:", (t3 - t2).toFixed(2), "ms");
-    console.log("🔎 Store OTP:", (t4 - t3).toFixed(2), "ms");
-    console.log("🚀 API response time:", (t5 - start).toFixed(2), "ms");
 
   } catch (error) {
     console.error("SEND OTP ERROR:", error.message);
