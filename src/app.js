@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");           // ← ADD
+const rateLimit = require("express-rate-limit"); // ← ADD
 
 const authRoutes = require("./routes/authRoutes.js");
 const userRoutes = require("./routes/userRoutes.js");
@@ -9,6 +11,30 @@ const adminRoutes = require("./routes/adminRoutes.js");
 
 const app = express();
 
+// ✅ Security headers (must be first)
+app.use(helmet());                          // ← ADD
+
+// ✅ Rate limiters
+const globalLimiter = rateLimit({          // ← ADD
+  windowMs: 15 * 60 * 1000,               // 15 minutes
+  max: 100,                                // 100 req per IP
+  message: { success: false, message: "Too many requests, please try again later." }
+});
+
+const authLimiter = rateLimit({            // ← ADD
+  windowMs: 15 * 60 * 1000,
+  max: 10,                                 // strict: 10 req per IP (login/OTP spam)
+  message: { success: false, message: "Too many auth attempts, please try again later." }
+});
+
+const complaintLimiter = rateLimit({       // ← ADD
+  windowMs: 15 * 60 * 1000,
+  max: 20,                                 // moderate: 20 submissions per IP
+  message: { success: false, message: "Too many complaint requests, slow down." }
+});
+
+app.use(globalLimiter);                    // ← ADD (applies to ALL routes)
+
 const allowedOrigins = [
   "https://urbancaredev.vercel.app",
   "http://localhost:3000",
@@ -17,11 +43,9 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, Postman, serverless cold starts)
       if (!origin && process.env.NODE_ENV !== "production") {
         return callback(null, true);
       }
-      
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -35,33 +59,28 @@ app.use(
   })
 );
 
-// ✅ Middleware
-app.use(express.json({ limit: "10mb" })); // Handle larger payloads (e.g., images)
+app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Routes
-app.use("/api/auth", authRoutes);
+// ✅ Routes (specific limiters applied here)
+app.use("/api/auth", authLimiter, authRoutes);           // ← CHANGED
 app.use("/api/user", userRoutes);
-app.use("/api/complaint", complaintRoutes);
+app.use("/api/complaint", complaintLimiter, complaintRoutes); // ← CHANGED
 app.use("/api/admin", adminRoutes);
 app.use("/api/cloudinary", cloudinaryRoutes);
 
-// ✅ Health check (useful for Vercel + monitoring)
 app.get("/api/health", (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     message: "UrbanCare Backend is running 🚀",
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV || "development"
   });
 });
 
-
-// ✅ 404 Handler (catch undefined routes)
 app.use((req, res) => {
   res.status(404).json({ message: `Route ${req.method} ${req.originalUrl} not found` });
 });
 
-// ✅ Global Error Handler (must be last)
 app.use((err, req, res, next) => {
   console.error("❌ Server Error:", {
     message: err.message,
@@ -69,15 +88,11 @@ app.use((err, req, res, next) => {
     path: req.originalUrl,
     method: req.method,
   });
-  
-  // Don't leak error details in production
   const isProd = process.env.NODE_ENV === "production";
-  
   res.status(err.status || 500).json({
     message: err.message || "Internal server error",
-    ...(isProd ? {} : { stack: err.stack }) // Show stack only in dev
+    ...(isProd ? {} : { stack: err.stack })
   });
 });
-
 
 module.exports = app;
