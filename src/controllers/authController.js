@@ -303,12 +303,7 @@ const resetPassword = async (req, res) => {
 };
 
 // ================= SEND OTP (REGISTRATION) =================
-const { performance } = require("perf_hooks");
-
 const sendOtpForRegistration = async (req, res) => {
-  // ================= TOTAL START =================
-  const totalStart = performance.now();
-
   try {
     const { email } = req.body;
 
@@ -319,18 +314,8 @@ const sendOtpForRegistration = async (req, res) => {
       });
     }
 
-    // ================= DB CHECK =================
-    const dbStart = performance.now();
-
-    const existingUser = await User.findOne({
-      email: email.toLowerCase()
-    });
-
-    const dbEnd = performance.now();
-
-    console.log(
-      `🧠 DB check: ${(dbEnd - dbStart).toFixed(2)} ms`
-    );
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
 
     if (existingUser) {
       return res.status(400).json({
@@ -339,61 +324,22 @@ const sendOtpForRegistration = async (req, res) => {
       });
     }
 
-    // ================= OTP GENERATION =================
-    const otpGenStart = performance.now();
-
+    // Generate OTP
     const otp = generateOTP();
 
-    const otpGenEnd = performance.now();
-
-    console.log(
-      `🔐 OTP generation: ${(otpGenEnd - otpGenStart).toFixed(2)} ms`
-    );
-
-    // ================= STORE OTP =================
-    const storeStart = performance.now();
-
+    // Store OTP
     otpStore[email] = {
       otp,
-      expiry: Date.now() + 2 * 60 * 1000
+      expiry: Date.now() + 2 * 60 * 1000 // 5 min
     };
 
-    const storeEnd = performance.now();
+    // Send email
+    await sendOTPEmail(email, otp,"register");
 
-    console.log(
-      `💾 Store OTP: ${(storeEnd - storeStart).toFixed(2)} ms`
-    );
-
-    // ================= API LOGIC TIME =================
-    const apiLogicEnd = performance.now();
-
-    console.log(
-      `🚀 API response time: ${(apiLogicEnd - totalStart).toFixed(2)} ms`
-    );
-
-    // ================= EMAIL SEND =================
-    const emailStart = performance.now();
-
-    await sendOTPEmail(email, otp, "register");
-
-    const emailEnd = performance.now();
-
-    console.log(
-      `📨 Email send time: ${(emailEnd - emailStart).toFixed(2)} ms`
-    );
-
-    // ================= SEND RESPONSE =================
     res.status(200).json({
       success: true,
       message: "OTP sent successfully"
     });
-
-    // ================= TOTAL BACKEND TIME =================
-    const totalEnd = performance.now();
-
-    console.log(
-      `🧠 Total backend time (including async email): ${(totalEnd - totalStart).toFixed(2)} ms`
-    );
 
   } catch (error) {
     console.error("SEND OTP ERROR:", error.message);
