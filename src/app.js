@@ -8,10 +8,10 @@ const userRoutes = require("./routes/userRoutes.js");
 const complaintRoutes = require("./routes/complaintRoutes.js");
 const cloudinaryRoutes = require("./routes/cloudinaryRoute.js");
 const adminRoutes = require("./routes/adminRoutes.js");
-const performanceMiddleware = require("./middleware/performanceMiddleware");
 
 const app = express();
 
+// ✅ Security headers (must be first)
 app.use(helmet());                          // ← ADD
 
 // ✅ Rate limiters
@@ -62,7 +62,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use(performanceMiddleware);
+// ✅ Routes (specific limiters applied here)
 app.use("/api/auth", authLimiter, authRoutes);           // ← CHANGED
 app.use("/api/user", userRoutes);
 app.use("/api/complaint", complaintLimiter, complaintRoutes); // ← CHANGED
