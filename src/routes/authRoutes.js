@@ -10,7 +10,7 @@ const {
   verifyRegistrationOtp            
 } = require("../controllers/authController.js");
 
-const protect = require("../middleware/authMiddleware.js");
+const {protect} = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
 

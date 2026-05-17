@@ -28,16 +28,35 @@ const complaintSchema = new mongoose.Schema(
     images: [String],
     videos: [String],
 
+    registrationNumber: {        
+      type: String,
+    },
+
+    assignedOfficer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Officer",
+      default: null,
+    },
+
+    adminNotes: [
+      {
+        text: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+
     status: {
       type: String,
-      enum: ["Pending", "In Progress", "Closed"],
-      default: "Pending"
+      enum: ["Pending", "In Progress", "Resolved", "Closed"],
+      default: "Pending",
     },
 
     complaintId: {
       type: String,
       unique: true
-    }
+    },
+
+    resolvedAt: { type: Date },
   },
   { timestamps: true }
 );
@@ -56,6 +75,7 @@ complaintSchema.pre("save", async function () {
 
       if (!existing) {
         this.complaintId = id;
+        this.registrationNumber = id;
         unique = true;
       }
     }

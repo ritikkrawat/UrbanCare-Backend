@@ -47,7 +47,17 @@ const userSchema = new mongoose.Schema(
     pincode: String,
 
     isDeleted: { type: Boolean, default: false },
-    deleteAt: { type: Date, default: null }
+    deleteAt: { type: Date, default: null },
+
+    city: {
+      type: String,
+      trim: true,
+    },
+    
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

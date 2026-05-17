@@ -1,25 +1,62 @@
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 
-const { adminLogin } = require("../controllers/adminController.js");
-const protect = require("../middleware/authMiddleware.js");
+const { protect, isAdmin } = require("../middleware/authMiddleware.js");
 
-// Admin login
+const {
+  adminLogin,
+  getDashboardStats,
+  getRecentComplaints,
+  getCategoryBreakdown,
+  getRecentUsers,
+  getAllComplaints,
+  updateComplaintStatus,
+  deleteComplaintByAdmin,
+  bulkUpdateStatus,
+  getAllUsers,
+  getUserById,
+  banUser,
+  deleteUserByAdmin,
+  getAllOfficers,
+  addOfficer,
+  updateOfficer,
+  deleteOfficer,
+  getOfficerComplaints,
+  getAnalytics,
+} = require("../controllers/adminController.js");
+
+// ── Auth (public) ─────────────────────────────────────────────────────────────
 router.post("/login", adminLogin);
 
-// Example protected route
-router.get("/dashboard", protect, (req, res) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Admin only",
-    });
-  }
+// All routes below require valid admin JWT
+router.use(protect, isAdmin);
 
-  res.json({
-    success: true,
-    message: "Welcome Admin",
-  });
-});
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+router.get("/dashboard/stats",      getDashboardStats);
+router.get("/complaints/recent",    getRecentComplaints);
+router.get("/dashboard/categories", getCategoryBreakdown);
+router.get("/users/recent",         getRecentUsers);
+
+// ── Complaints ────────────────────────────────────────────────────────────────
+router.get   ("/complaints",                getAllComplaints);
+router.patch ("/complaints/bulk-status",    bulkUpdateStatus);       // before /:id
+router.patch ("/complaint/:id/status",      updateComplaintStatus);
+router.delete("/complaint/:id",             deleteComplaintByAdmin);
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+router.get   ("/users",        getAllUsers);
+router.get   ("/user/:id",     getUserById);
+router.patch ("/user/:id/ban", banUser);
+router.delete("/user/:id",     deleteUserByAdmin);
+
+// ── Officers ──────────────────────────────────────────────────────────────────
+router.get   ("/officers",                  getAllOfficers);
+router.post  ("/officer",                   addOfficer);
+router.put   ("/officer/:id",               updateOfficer);
+router.delete("/officer/:id",               deleteOfficer);
+router.get   ("/officer/:id/complaints",    getOfficerComplaints);
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+router.get("/analytics", getAnalytics);
 
 module.exports = router;
