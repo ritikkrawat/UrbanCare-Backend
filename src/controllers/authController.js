@@ -3,8 +3,12 @@ const bcrypt = require("bcryptjs");
 const generateToken = require("../utils/generateToken.js");
 const { sendOTPEmail } = require("../utils/sendEmail.js");
 const otpStore = require("../utils/otpStore.js");
+
 // ================= REGISTER =================
 const registerUser = async (req, res) => {
+  // ── STEP 5: TRACK REGISTER API ──
+  const totalStart = performance.now();
+
   try {
     const {
       name,
@@ -41,9 +45,14 @@ const registerUser = async (req, res) => {
       });
     }
 
+    // ── DB Check: Existing User ──
+    const dbStart = performance.now(); // ← ADD BEFORE DB CHECK
     const existingUser = await User.findOne({
       $or: [{ email: email.toLowerCase() }, { mobile }]
     });
+    console.log(
+      `DB Check Time: ${(performance.now() - dbStart).toFixed(2)} ms`
+    ); // ← ADD AFTER DB QUERY
     
     if (existingUser) {
       if (existingUser.email === email.toLowerCase()) {
@@ -60,8 +69,15 @@ const registerUser = async (req, res) => {
       }
     }
 
+    // ── Password Hashing ──
+    const hashStart = performance.now(); // ← ADD BEFORE BCRYPT
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log(
+      `Password Hash Time: ${(performance.now() - hashStart).toFixed(2)} ms`
+    ); // ← ADD AFTER BCRYPT
 
+    // ── Create New User ──
+    const createStart = performance.now(); // ← ADD BEFORE USER.CREATE
     const user = await User.create({
       name,
       email: email.toLowerCase(),
@@ -74,8 +90,16 @@ const registerUser = async (req, res) => {
       district,
       pincode
     });
+    console.log(
+      `User Create Time: ${(performance.now() - createStart).toFixed(2)} ms`
+    ); // ← ADD AFTER CREATE
 
     const token = generateToken(user._id);
+
+    // ── Final Timing: Total Register API Time ──
+    console.log(
+      `TOTAL REGISTER API TIME: ${(performance.now() - totalStart).toFixed(2)} ms`
+    ); // ← ADD BEFORE RESPONSE
 
     res.status(201).json({
       success: true,
@@ -91,6 +115,11 @@ const registerUser = async (req, res) => {
 
   } catch (error) {
     console.error("REGISTER ERROR:", error.message);
+
+    // ── Log total time even on error ──
+    console.log(
+      `TOTAL REGISTER API TIME (ERROR): ${(performance.now() - totalStart).toFixed(2)} ms`
+    );
 
     res.status(500).json({
       success: false,
@@ -304,8 +333,14 @@ const resetPassword = async (req, res) => {
 
 // ================= SEND OTP (REGISTRATION) =================
 const sendOtpForRegistration = async (req, res) => {
+  const totalStart = performance.now();
+
   try {
+    console.log("\n========= SEND OTP =========");
+
     const { email } = req.body;
+
+    const validationStart = performance.now();
 
     if (!email) {
       return res.status(400).json({
@@ -314,8 +349,23 @@ const sendOtpForRegistration = async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    console.log(
+      `Validation Time: ${
+        (performance.now() - validationStart).toFixed(2)
+      } ms`
+    );
+
+    const dbStart = performance.now();
+
+    const existingUser = await User.findOne({
+      email: email.toLowerCase()
+    });
+
+    console.log(
+      `Database Check Time: ${
+        (performance.now() - dbStart).toFixed(2)
+      } ms`
+    );
 
     if (existingUser) {
       return res.status(400).json({
@@ -324,17 +374,38 @@ const sendOtpForRegistration = async (req, res) => {
       });
     }
 
-    // Generate OTP
+    const otpStart = performance.now();
+
     const otp = generateOTP();
 
-    // Store OTP
     otpStore[email] = {
       otp,
-      expiry: Date.now() + 2 * 60 * 1000 // 5 min
+      expiry: Date.now() + 2 * 60 * 1000
     };
 
-    // Send email
-    await sendOTPEmail(email, otp,"register");
+    console.log(
+      `OTP Generation Time: ${
+        (performance.now() - otpStart).toFixed(2)
+      } ms`
+    );
+
+    const emailStart = performance.now();
+
+    await sendOTPEmail(email, otp, "register");
+
+    console.log(
+      `Email Sending Time: ${
+        (performance.now() - emailStart).toFixed(2)
+      } ms`
+    );
+
+    console.log(
+      `TOTAL API TIME: ${
+        (performance.now() - totalStart).toFixed(2)
+      } ms`
+    );
+
+    console.log("============================\n");
 
     res.status(200).json({
       success: true,
@@ -353,6 +424,9 @@ const sendOtpForRegistration = async (req, res) => {
 
 // ================= VERIFY OTP (REGISTRATION) =================
 const verifyRegistrationOtp = async (req, res) => {
+  // ── STEP 6: TRACK VERIFY OTP API ──
+  const totalStart = performance.now();
+
   try {
     const { email, otp } = req.body;
 
@@ -383,6 +457,11 @@ const verifyRegistrationOtp = async (req, res) => {
     // OTP correct → delete it
     delete otpStore[email];
 
+    // ── Final Timing: Verify OTP API Time ──
+    console.log(
+      `VERIFY OTP API TIME: ${(performance.now() - totalStart).toFixed(2)} ms`
+    ); // ← ADD BEFORE RESPONSE
+
     res.status(200).json({
       success: true,
       message: "OTP verified successfully"
@@ -390,6 +469,11 @@ const verifyRegistrationOtp = async (req, res) => {
 
   } catch (error) {
     console.error("VERIFY REG OTP ERROR:", error.message);
+
+    // ── Log total time even on error ──
+    console.log(
+      `VERIFY OTP API TIME (ERROR): ${(performance.now() - totalStart).toFixed(2)} ms`
+    );
 
     res.status(500).json({
       success: false,
