@@ -34,16 +34,15 @@ const officerSchema = new mongoose.Schema(
       required: true,
       // matches your complaint categories
       enum: [
-        "Roads & Infrastructure",
-        "Water Supply",
-        "Electricity",
-        "Sanitation & Waste",
-        "Public Safety",
-        "Parks & Recreation",
-        "Noise & Pollution",
-        "Street Lighting",
-        "Drainage & Sewage",
-        "General",
+        "Sanitation & Garbage", 
+        "Street Light & Electricity", 
+        "Traffic & Roads", 
+        "Parks & Public Spaces",
+        "Animal Issues", 
+        "Water Supply & Drainage", 
+        "Noise & Pollution", 
+        "Safety & Emergency", 
+        "Public Health & Hygiene"
       ],
     },
 
@@ -61,10 +60,9 @@ const officerSchema = new mongoose.Schema(
 );
 
 // Hash password before save
-officerSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+officerSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 // Compare password helper
